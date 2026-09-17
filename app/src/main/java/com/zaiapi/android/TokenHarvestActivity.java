@@ -239,8 +239,11 @@ public class TokenHarvestActivity extends Activity {
                 if ("1".equals(r)) {
                     onSdkReady();
                 } else if (tries == 0) {
-                    // 首次不可用：模拟发送 "__" 触发初始化（同 token-collector）
-                    statusText.setText("z_um 未就绪，发送消息触发初始化…");
+                    // 首次不可用：模拟发送一条随机短消息触发初始化
+                    // （任意内容均可 —— 触发的是"发送"这个动作，而非内容）
+                    String rnd = "__" + java.util.UUID.randomUUID().toString()
+                            .replace("-", "").substring(0, 8);
+                    statusText.setText("z_um 未就绪，发送触发消息（" + rnd + "）…");
                     evaluate(
                         "(function(){" +
                         " var input = document.querySelector('#chat-input');" +
@@ -248,7 +251,7 @@ public class TokenHarvestActivity extends Activity {
                         " if (!input || !btn) return 'elements_missing';" +
                         " try {" +
                         "  var setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype,'value').set;" +
-                        "  setter.call(input, '__');" +
+                        "  setter.call(input, '" + rnd + "');" +
                         "  input.dispatchEvent(new Event('input',{bubbles:true}));" +
                         "  setTimeout(function(){ btn.click(); }, 300);" +
                         "  return 'sent';" +
