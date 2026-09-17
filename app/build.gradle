@@ -1,0 +1,55 @@
+plugins {
+    id 'com.android.application'
+}
+
+def keystoreFile = rootProject.file('app/keystore/zaiapi.keystore')
+
+android {
+    namespace 'com.zaiapi.android'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.zaiapi.android"
+        minSdk 24
+        targetSdk 35
+        versionCode 1
+        versionName "1.0.0"
+    }
+
+    signingConfigs {
+        release {
+            if (keystoreFile.exists()) {
+                storeFile keystoreFile
+                storePassword 'ds2api123'
+                keyAlias 'ds2api'
+                keyPassword 'ds2api123'
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            shrinkResources false
+            if (keystoreFile.exists()) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    packagingOptions {
+        jniLibs {
+            // 必须以未压缩方式打包，保证安装时能完整释放到 nativeLibraryDir
+            useLegacyPackaging true
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

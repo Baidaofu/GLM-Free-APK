@@ -1,0 +1,32 @@
+# Gradle / Android
+app/build/
+.gradle/
+build/
+local.properties
+*.apk
+!artifacts/*.apk
+
+# Go build artifacts
+go-server/libzaiapi.so
+go-server/*.exe
+go-server/diag-android
+go-server/ipcheck-android
+go-server/tokens.sqlite
+go-server/tokens.sqlite-shm
+go-server/tokens.sqlite-wal
+go-server/token-collector
+
+# Android / Java
+*.keystore.tmp
+captures/
+.externalNativeBuild/
+.cxx/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
