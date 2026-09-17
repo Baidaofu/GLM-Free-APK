@@ -190,6 +190,7 @@ public class ServerService extends Service {
         try {
             File filesDir = getFilesDir();
             File tokenDb = tokenDbFile(this);
+            mergeHarvestIntoMainDb(filesDir);
             if (!tokenDb.isFile()) {
                 throw new IllegalStateException(
                         "未找到 token 库 tokens.sqlite —— 请先在 PC 端运行 token-collector 采集，"
@@ -408,6 +409,79 @@ public class ServerService extends Service {
             while ((n = is.read(buf)) != -1) {
                 os.write(buf, 0, n);
             }
+        }
+    }
+
+    /**
+     * 启动 Go 进程前调用（此时无并发）：把 WebView 采集器写入的
+     * tokens.harvest.sqlite 合并进主 tokens.sqlite，去重后删除采集文件。
+     */
+    private void mergeHarvestIntoMainDb(File filesDir) {
+        File harvest = new File(filesDir, "tokens.harvest.sqlite");
+        if (!harvest.isFile()) {
+            return;
+        }
+        File main = new File(filesDir, "tokens.sqlite");
+        int merged = 0, skipped = 0;
+        try {
+            if (!main.isFile()) {
+                // 主库不存在：直接用采集库改名替代（服务端也能接受空库+采集数据）
+                copyFile(harvest, main);
+                // 清理可能残留的 WAL 伴生文件（与主库不一致会损坏）
+                new File(filesDir, "tokens.sqlite-wal").delete();
+                new File(filesDir, "tokens.sqlite-shm").delete();
+                // harvest 里的 WAL 伴生文件不影响：改名主库后首次打开自动恢复
+                new File(filesDir, "tokens.harvest.sqlite-wal").renameTo(new File(filesDir, "tokens.sqlite-wal"));
+                new File(filesDir, "tokens.harvest.sqlite-shm").renameTo(new File(filesDir, "tokens.sqlite-shm"));
+                LogStore.get().log("APP", "主 token 库不存在，已用采集库创建（" + harvest.length() + " 字节）");
+                harvest.delete();
+                return;
+            }
+            try (android.database.sqlite.SQLiteDatabase src =
+                         android.database.sqlite.SQLiteDatabase.openDatabase(
+                                 harvest.getAbsolutePath(), null, android.database.sqlite.SQLiteDatabase.OPEN_READONLY);
+                 android.database.sqlite.SQLiteDatabase dst =
+                         android.database.sqlite.SQLiteDatabase.openOrCreateDatabase(main, null)) {
+                dst.execSQL("CREATE TABLE IF NOT EXISTS tokens (" +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                        "token TEXT NOT NULL, " +
+                        "batch INTEGER NOT NULL)");
+                android.database.Cursor c = src.rawQuery(
+                        "SELECT token, batch FROM tokens ORDER BY id", null);
+                dst.beginTransaction();
+                try {
+                    android.content.ContentValues cv = new android.content.ContentValues();
+                    while (c.moveToNext()) {
+                        String token = c.getString(0);
+                        long batch = c.getLong(1);
+                        android.database.Cursor dup = dst.rawQuery(
+                                "SELECT 1 FROM tokens WHERE token = ? LIMIT 1", new String[]{token});
+                        boolean exists = dup.moveToFirst();
+                        dup.close();
+                        if (exists) {
+                            skipped++;
+                            continue;
+                        }
+                        cv.clear();
+                        cv.put("token", token);
+                        cv.put("batch", batch);
+                        dst.insert("tokens", null, cv);
+                        merged++;
+                    }
+                    dst.setTransactionSuccessful();
+                } finally {
+                    dst.endTransaction();
+                }
+                c.close();
+            }
+            harvest.delete();
+            new File(filesDir, "tokens.harvest.sqlite-wal").delete();
+            new File(filesDir, "tokens.harvest.sqlite-shm").delete();
+            if (merged > 0 || skipped > 0) {
+                LogStore.get().log("APP", "采集合并完成：新增 " + merged + "，重复跳过 " + skipped);
+            }
+        } catch (Throwable t) {
+            LogStore.get().log("APP", "采集合并失败（保留采集文件）: " + t);
         }
     }
 

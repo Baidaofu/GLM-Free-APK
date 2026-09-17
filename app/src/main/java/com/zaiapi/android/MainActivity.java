@@ -115,6 +115,21 @@ public class MainActivity extends Activity implements LogStore.Listener {
         btnRow.addView(stopBtn, weightLp());
         btnRow.addView(importBtn, weightLp());
 
+        // 第二行：内置采集器
+        LinearLayout btnRow2 = new LinearLayout(this);
+        btnRow2.setOrientation(LinearLayout.HORIZONTAL);
+        LinearLayout.LayoutParams row2Lp = new LinearLayout.LayoutParams(-1, -2);
+        row2Lp.topMargin = dp(4);
+        root.addView(btnRow2, row2Lp);
+        Button harvestBtn = makeButton("内置采集token（WebView）", v -> {
+            try {
+                startActivity(new Intent(this, TokenHarvestActivity.class));
+            } catch (Throwable t) {
+                Toast.makeText(this, "无法打开: " + t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+        btnRow2.addView(harvestBtn, new LinearLayout.LayoutParams(-1, -2));
+
         // 设置折叠头
         LinearLayout setHead = new LinearLayout(this);
         setHead.setOrientation(LinearLayout.HORIZONTAL);
