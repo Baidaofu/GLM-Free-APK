@@ -1,6 +1,7 @@
 package com.zaiapi.android;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -14,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
+import android.widget.EditText;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -103,6 +105,7 @@ public class TokenHarvestActivity extends Activity {
 
         harvestBtn = makeButton("重新加载页面", v -> {
             setHarvesting(false);
+            applyUa(webView.getSettings());
             webView.loadUrl(TARGET_URL);
         });
         btn50 = makeButton("采集 50", v -> startHarvest(50));
@@ -110,6 +113,16 @@ public class TokenHarvestActivity extends Activity {
         btnRow.addView(harvestBtn, weightLp());
         btnRow.addView(btn50, weightLp());
         btnRow.addView(btn200, weightLp());
+
+        LinearLayout btnRow2 = new LinearLayout(this);
+        btnRow2.setOrientation(LinearLayout.HORIZONTAL);
+        LinearLayout.LayoutParams row2Lp = new LinearLayout.LayoutParams(-1, -2);
+        row2Lp.topMargin = dp(4);
+        root.addView(btnRow2, row2Lp);
+        Button settingsBtn = makeButton(
+            "\u91c7\u96c6\u8bbe\u7f6e\uff08UA / \u89e6\u53d1\u6d88\u606f\uff09",
+            v -> showHarvestSettings());
+        btnRow2.addView(settingsBtn, new LinearLayout.LayoutParams(-1, -2));
 
         WebView wv = new WebView(this);
         webView = wv;
@@ -144,17 +157,7 @@ public class TokenHarvestActivity extends Activity {
         s.setLoadWithOverviewMode(true);
         s.setUseWideViewPort(true);
         s.setBuiltInZoomControls(false);
-        // UA 伪装：真 Chrome Mobile 格式。WebView UA 的特征是
-        // "; wv) ... Version/4.0 Chrome/xxx" —— 去掉 "; wv" 与 "Version/4.0"
-        // 后即与真 Chrome 无异（内核版本号用设备 WebView 真实值，避免与 TLS/JS
-        // 引擎特征矛盾）
-        String ua = s.getUserAgentString();
-        if (ua != null) {
-            String fixed = ua.replace("; wv", "")
-                             .replaceFirst("Version/[0-9.]+\\s", "");
-            s.setUserAgentString(fixed);
-            LogStore.get().log("APP", "WebView UA 伪装: " + fixed);
-        }
+        applyUa(s);
 
         webView.addJavascriptInterface(new Bridge(), "AndroidBridge");
         webView.setWebChromeClient(new WebChromeClient());
@@ -178,6 +181,118 @@ public class TokenHarvestActivity extends Activity {
 
     private void evaluate(String js) {
         webView.evaluateJavascript(js, null);
+    }
+
+    // ---------- UA management ----------
+
+    /** Custom UA wins; default strips WebView markers from real UA. */
+    private void applyUa(WebSettings s) {
+        String custom = getSharedPreferences("zaiapi", MODE_PRIVATE)
+                .getString("harvest_ua", "");
+        if (custom != null && !custom.trim().isEmpty()) {
+            s.setUserAgentString(custom.trim());
+            L("UA: custom, " + custom.trim().length() + " chars");
+            return;
+        }
+        String ua = s.getUserAgentString();
+        if (ua != null) {
+            String fixed = ua.replace("; wv", "")
+                             .replaceFirst("Version/[0-9.]+\\s", "");
+            s.setUserAgentString(fixed);
+            L("UA: default, " + fixed.length() + " chars");
+        }
+    }
+
+    private static final String[] RAND_MODELS = {
+        "2210132C", "SM-S918B", "Pixel 8", "Pixel 7", "2201123G",
+        "CPH2451", "SM-A546B", "V2243A", "Pixel 8 Pro", "M2012K11AC"
+    };
+    private static final String[] RAND_BUILDS = {
+        "UKQ1.230917.001", "UP1A.231005.007", "UD1A.230803.041",
+        "TQ3A.230901.001", "SKQ1.211006.001", "TP1A.220905.001",
+        "AP2A.240905.003", "AP1A.240505.005"
+    };
+
+    /** Realistic random UA (mobile / desktop Chrome, alternating). */
+    private String randomUa() {
+        java.util.Random r = new java.util.Random();
+        int major = 128 + r.nextInt(25);
+        int b = 6000 + r.nextInt(1000);
+        int p = r.nextInt(121);
+        if (r.nextBoolean()) {
+            String model = RAND_MODELS[r.nextInt(RAND_MODELS.length)];
+            String build = RAND_BUILDS[r.nextInt(RAND_BUILDS.length)];
+            int androidVer = 12 + r.nextInt(5);
+            return "Mozilla/5.0 (Linux; Android " + androidVer + "; " + model
+                    + " Build/" + build + ") AppleWebKit/537.36 (KHTML, like Gecko) "
+                    + "Chrome/" + major + ".0." + b + "." + p + " Mobile Safari/537.36";
+        }
+        return "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                + "(KHTML, like Gecko) Chrome/" + major + ".0." + b + "." + p
+                + " Safari/537.36";
+    }
+
+    // ---------- harvest settings dialog ----------
+
+    private void showHarvestSettings() {
+        final android.content.SharedPreferences sp =
+                getSharedPreferences("zaiapi", MODE_PRIVATE);
+
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        int pad = dp(16);
+        box.setPadding(pad, dp(8), pad, 0);
+
+        TextView l1 = new TextView(this);
+        l1.setText("\u81ea\u5b9a\u4e49 UA\uff08\u7559\u7a7a = \u9ed8\u8ba4\uff1a\u771f\u5b9e WebView UA \u53bb wv/Version \u6807\u8bb0\uff09");
+        l1.setTextSize(12);
+        box.addView(l1);
+
+        final EditText etUa = new EditText(this);
+        etUa.setText(sp.getString("harvest_ua", ""));
+        etUa.setTextSize(11);
+        etUa.setTypeface(Typeface.MONOSPACE);
+        box.addView(etUa);
+
+        TextView l2 = new TextView(this);
+        l2.setText("\u89e6\u53d1\u6d88\u606f\u5185\u5bb9\uff08\u7559\u7a7a = \u968f\u673a\u751f\u6210\uff09");
+        l2.setTextSize(12);
+        box.addView(l2);
+
+        final EditText etMsg = new EditText(this);
+        etMsg.setText(sp.getString("trigger_msg", ""));
+        etMsg.setTextSize(11);
+        box.addView(etMsg);
+
+        TextView hint = new TextView(this);
+        hint.setText("\u4fdd\u5b58\u540e\u70b9\u300c\u91cd\u65b0\u52a0\u8f7d\u9875\u9762\u300d\u751f\u6548");
+        hint.setTextSize(11);
+        hint.setTextColor(Color.parseColor("#64748B"));
+        box.addView(hint);
+
+        AlertDialog dlg = new AlertDialog.Builder(this)
+                .setTitle("\u91c7\u96c6\u8bbe\u7f6e")
+                .setView(box)
+                .setPositiveButton("\u4fdd\u5b58", null)
+                .setNeutralButton("\u968f\u673aUA", null)
+                .setNegativeButton("\u6062\u590d\u9ed8\u8ba4UA", null)
+                .create();
+        dlg.setOnShowListener(d -> {
+            dlg.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener(v ->
+                    etUa.setText(randomUa()));
+            dlg.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener(v ->
+                    etUa.setText(""));
+            dlg.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+                sp.edit()
+                  .putString("harvest_ua", etUa.getText().toString().trim())
+                  .putString("trigger_msg", etMsg.getText().toString().trim())
+                  .apply();
+                applyUa(webView.getSettings());
+                Toast.makeText(this, "\u5df2\u4fdd\u5b58", Toast.LENGTH_SHORT).show();
+                dlg.dismiss();
+            });
+        });
+        dlg.show();
     }
 
     private void evaluate(String js, android.webkit.ValueCallback<String> cb) {
@@ -241,8 +356,12 @@ public class TokenHarvestActivity extends Activity {
                 } else if (tries == 0) {
                     // 首次不可用：模拟发送一条随机短消息触发初始化
                     // （任意内容均可 —— 触发的是"发送"这个动作，而非内容）
-                    String rnd = "__" + java.util.UUID.randomUUID().toString()
-                            .replace("-", "").substring(0, 8);
+                    String prefMsg = getSharedPreferences("zaiapi", MODE_PRIVATE)
+                            .getString("trigger_msg", "");
+                    String rnd = (prefMsg != null && !prefMsg.trim().isEmpty())
+                            ? prefMsg.trim()
+                            : "__" + java.util.UUID.randomUUID().toString()
+                                    .replace("-", "").substring(0, 8);
                     statusText.setText("z_um 未就绪，发送触发消息（" + rnd + "）…");
                     evaluate(
                         "(function(){" +

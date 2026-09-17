@@ -2,6 +2,7 @@ package com.zaiapi.android;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -128,7 +129,17 @@ public class MainActivity extends Activity implements LogStore.Listener {
                 Toast.makeText(this, "无法打开: " + t.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
-        btnRow2.addView(harvestBtn, new LinearLayout.LayoutParams(-1, -2));
+        LinearLayout.LayoutParams hp = new LinearLayout.LayoutParams(0, -2, 1f);
+        hp.leftMargin = dp(2);
+        hp.rightMargin = dp(2);
+        btnRow2.addView(harvestBtn, hp);
+
+        Button clearTokenBtn = makeButton("清空token库", v -> clearTokenDb());
+        clearTokenBtn.setTextColor(Color.parseColor("#B91C1C"));
+        LinearLayout.LayoutParams cp = new LinearLayout.LayoutParams(0, -2, 1f);
+        cp.leftMargin = dp(2);
+        cp.rightMargin = dp(2);
+        btnRow2.addView(clearTokenBtn, cp);
 
         // 设置折叠头
         LinearLayout setHead = new LinearLayout(this);
@@ -415,6 +426,51 @@ public class MainActivity extends Activity implements LogStore.Listener {
                 != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1);
         }
+    }
+
+    /** Clear all device tokens (main db + harvest temp + backup). */
+    private void clearTokenDb() {
+        if (ServerService.isRunning()) {
+            Toast.makeText(this, "请先停止服务再清空", Toast.LENGTH_LONG).show();
+            return;
+        }
+        long count = -1;
+        try {
+            File db = ServerService.tokenDbFile(this);
+            if (db.isFile()) {
+                android.database.sqlite.SQLiteDatabase c =
+                        android.database.sqlite.SQLiteDatabase.openDatabase(
+                                db.getAbsolutePath(), null,
+                                android.database.sqlite.SQLiteDatabase.OPEN_READONLY);
+                android.database.Cursor cur = c.rawQuery("SELECT COUNT(*) FROM tokens", null);
+                if (cur.moveToFirst()) count = cur.getLong(0);
+                cur.close();
+                c.close();
+            }
+        } catch (Throwable ignored) {
+        }
+        final long n = count;
+        new AlertDialog.Builder(this)
+                .setTitle("清空 token 库")
+                .setMessage("将删除全部 device token"
+                        + (n >= 0 ? "（当前 " + n + " 个）" : "")
+                        + "，含采集暂存与备份，不可恢复。确定？")
+                .setPositiveButton("清空", (d, w) -> {
+                    File dir = getFilesDir();
+                    String[] names = {"tokens.sqlite", "tokens.sqlite-wal",
+                            "tokens.sqlite-shm", "tokens.sqlite.bak",
+                            "tokens.harvest.sqlite", "tokens.harvest.sqlite-wal",
+                            "tokens.harvest.sqlite-shm"};
+                    int deleted = 0;
+                    for (String name : names) {
+                        File f = new File(dir, name);
+                        if (f.exists() && f.delete()) deleted++;
+                    }
+                    LogStore.get().log("APP", "tokens cleared (" + deleted + " files removed)");
+                    Toast.makeText(this, "cleared", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("cancel", null)
+                .show();
     }
 
     private void refreshStatus() {
