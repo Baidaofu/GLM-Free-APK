@@ -474,6 +474,7 @@ public class MainActivity extends Activity implements LogStore.Listener {
     }
 
     private void refreshStatus() {
+        ServerService.reconcile();
         ServerService.State st = ServerService.getState();
         boolean running = ServerService.isRunning();
         switch (st) {

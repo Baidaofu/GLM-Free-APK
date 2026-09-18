@@ -73,6 +73,28 @@ public class ServerService extends Service {
         return state == State.RUNNING && p != null && p.isAlive();
     }
 
+    /**
+     * UI ticker 每秒调用：若状态为 RUNNING 但进程已死（异常情况），
+     * 自愈纠正为 STOPPED，避免启动按钮永久灰死。
+     */
+    public static void reconcile() {
+        if (state == State.RUNNING) {
+            Process p = process;
+            if (p == null || !p.isAlive()) {
+                LogStore.get().log("APP",
+                        "检测到进程已退出但状态未更新，自动纠正为已停止");
+                state = State.STOPPED;
+                process = null;
+                releaseWakeLockStatic();
+            }
+        }
+    }
+
+    private static void releaseWakeLockStatic() {
+        // no-op placeholder: wake lock release happens on service instance;
+        // static context cannot reach it, next start acquires fresh lock
+    }
+
     // ---------- 设置存取 ----------
 
     public static SharedPreferences prefs(Context ctx) {
@@ -299,6 +321,7 @@ public class ServerService extends Service {
                 stopSelf();
             }, "zaiapi-waiter");
             waiter.setDaemon(true);
+            waiter.start();
         } catch (Throwable t) {
             lastError = String.valueOf(t.getMessage());
             LogStore.get().log("APP", "启动失败: " + t);
