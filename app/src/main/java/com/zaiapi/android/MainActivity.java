@@ -311,31 +311,39 @@ public class MainActivity extends ThemedActivity implements LogStore.Listener {
         ServerService.State st = ServerService.getState();
         boolean running = ServerService.isRunning();
         View root = ui.getRoot();
+        int port = ServerService.port(this);
 
+        // 固定两行：第一行「状态（+ 运行时间）」，第二行「端口」；
+        // 行数在所有服务状态下恒定，启动后不会出现高度跳动
+        ui.statusDetail.setText(getString(R.string.status_detail_port, port));
         switch (st) {
             case RUNNING:
                 if (running) {
-                    ui.statusText.setText(getString(R.string.status_running,
-                            ServerService.port(this), uptime()));
-                    setStatusStyle(R.drawable.ic_play_circle, ATTR_PRIMARY);
+                    setStatus(getString(R.string.status_running, uptime()),
+                            R.drawable.ic_play_circle, ATTR_PRIMARY);
                 } else {
-                    ui.statusText.setText(getString(R.string.status_abnormal));
-                    setStatusStyle(R.drawable.ic_error, ATTR_ERROR);
+                    setStatus(getString(R.string.status_abnormal),
+                            R.drawable.ic_error, ATTR_ERROR);
                 }
                 break;
             case STARTING:
-                ui.statusText.setText(getString(R.string.status_starting));
-                setStatusStyle(R.drawable.ic_bolt, ATTR_TERTIARY);
+                setStatus(getString(R.string.status_starting),
+                        R.drawable.ic_bolt, ATTR_TERTIARY);
                 break;
             default:
-                String err = ServerService.getLastError();
-                String text = getString(R.string.status_stopped)
-                        + (err.isEmpty() ? "" : "\n" + getString(R.string.status_last_error, err));
-                ui.statusText.setText(text);
-                setStatusStyle(R.drawable.ic_pause_circle,
-                        ATTR_ON_SURFACE_VARIANT);
+                setStatus(getString(R.string.status_stopped),
+                        R.drawable.ic_pause_circle, ATTR_ON_SURFACE_VARIANT);
                 break;
         }
+        // 最近错误单独一行（仅出错时出现），避免与状态文案抢行
+        String err = ServerService.getLastError();
+        if (err.isEmpty()) {
+            ui.statusError.setVisibility(View.GONE);
+        } else {
+            ui.statusError.setVisibility(View.VISIBLE);
+            ui.statusError.setText(getString(R.string.status_last_error, err));
+        }
+
         ui.startBtn.setEnabled(st == ServerService.State.STOPPED);
         ui.stopBtn.setEnabled(st == ServerService.State.RUNNING);
 
@@ -360,8 +368,9 @@ public class MainActivity extends ThemedActivity implements LogStore.Listener {
         }
     }
 
-    /** 状态图标 + 文字配色（跟随主题语义色）。 */
-    private void setStatusStyle(int iconRes, int colorAttr) {
+    /** 状态区：标题行（状态 + 运行时间）+ 图标配色；端口行由调用方固定显示。 */
+    private void setStatus(CharSequence title, int iconRes, int colorAttr) {
+        ui.statusText.setText(title);
         int color = attrColor(ui.getRoot(), colorAttr);
         ui.statusIcon.setImageResource(iconRes);
         ui.statusIcon.setImageTintList(ColorStateList.valueOf(color));

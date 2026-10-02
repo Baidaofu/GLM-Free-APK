@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  网络安全策略：targetSdk 28+ 默认禁止明文（cleartext）通信。
+  本地 Go 服务端监听的是明文 HTTP（127.0.0.1:3001），App 自身的
+  /health 探测（ServerService.probeReady）必须能明文访问它，
+  否则探测会被系统拦截、Token 余量永远拿不到。
+  这里只对回环地址放开明文，其余域名依旧保持 HTTPS-only。
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">127.0.0.1</domain>
+        <domain includeSubdomains="false">localhost</domain>
+    </domain-config>
+</network-security-config>

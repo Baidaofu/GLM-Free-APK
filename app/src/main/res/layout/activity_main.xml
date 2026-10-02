@@ -75,13 +75,45 @@
                         android:layout_weight="1"
                         android:orientation="vertical">
 
+                        <!--
+                          状态区固定两行：第一行「状态 + 运行时间」，第二行「端口」。
+                          两行内容均 maxLines=1 + 省略号，且行数在所有状态下恒定
+                          （停止时第一行只有状态、端口行常在），启动后不会多出一行
+                          导致卡片高度变化。
+                        -->
                         <com.google.android.material.textview.MaterialTextView
                             android:id="@+id/statusText"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:maxLines="1"
                             android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
                             android:textColor="?attr/colorOnSurface"
-                            tools:text="● 服务运行中 · 端口 3001 · 已运行 00:01:23" />
+                            tools:text="服务运行中 · 已运行 00:01:23" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/statusDetail"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/space_xxs"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            tools:text="端口 3001" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/statusError"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/space_xs"
+                            android:ellipsize="end"
+                            android:maxLines="2"
+                            android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                            android:textColor="?attr/colorError"
+                            android:visibility="gone"
+                            tools:text="最近错误：未找到 token 库 tokens.sqlite"
+                            tools:visibility="visible" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/tokenChip"

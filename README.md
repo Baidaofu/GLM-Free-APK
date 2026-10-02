@@ -35,7 +35,7 @@ Z.AI 对中国大陆 IP 的游客链路直接拒绝：登录/注册页不可用�
 
 - **启动服务 / 停止服务** —— 前台服务保活，子进程运行 Go 服务端（默认端口 `3001`）
 - **导入 token 库** —— 选择 PC 端 `token-collector` 采集的 `tokens.sqlite`（带 SQLite 校验 + 旧库自动备份）
-- **Token 余量显示** —— 轮询 `/health` 的 `tokenCount`，余量不足时变红提醒
+- **Token 余量显示** —— 轮询 `/health` 的 `tokenCount`（兼容服务端 503 “上游未就绪” 响应，余量仍会刷新），余量不足时变红提醒
 - **设置** —— 端口 / API Key（AUTH_TOKEN）/ 出站代理（HTTPS_PROXY）/ ZAI_TOKEN（可选，解锁全模型与图片输入）/ AgentMode 开关
 - **实时运行日志** —— Go 服务端全部输出；支持一键复制、长按自由选择
 
@@ -79,6 +79,14 @@ Z.AI 对中国大陆 IP 的游客链路直接拒绝：登录/注册页不可用�
 环境：JDK 17、Android SDK（platform 35 + build-tools 35.0.0）、Go ≥ 1.27。
 
 依赖：仅 `com.google.android.material:material:1.14.0`（传递引入 AndroidX，需要 `android.useAndroidX=true`，见 `gradle.properties`）。
+
+### 体积与兼容性
+
+- release 开启 **R8 + 资源压缩**（`minifyEnabled` / `shrinkResources`），保留规则见 `app/proguard-rules.pro`。
+  WebView 采集器的 JS 桥（`addJavascriptInterface` + `@JavascriptInterface`）靠反射调用，已整类保留，混淆后仍可用。
+- APK 体积约 **7.2 MB**（优化前 10.5 MB）：其中 Go 服务端 `libzaiapi.so` 压缩后 5.5 MB 是主要部分，其余为 dex（~0.7 MB）与资源（~0.9 MB）。
+- `app/src/main/res/xml/network_security_config.xml`：**仅对 127.0.0.1 / localhost 放开明文流量**。
+  本地 Go 服务端是明文 HTTP，而 targetSdk 28+ 默认禁明文，不放开的话 App 自身的 `/health` 探测会被系统拦截（Token 余量将永远不更新）。
 
 ```bash
 # 1. 从 go-server/ 源码构建 Android 原生服务端

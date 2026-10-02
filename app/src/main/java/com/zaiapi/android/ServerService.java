@@ -348,6 +348,8 @@ public class ServerService extends Service {
     /** 就绪探测 + token 余量轮询（每 5 秒查 /health 的 tokenCount）。 */
     private void probeReady() {
         boolean announced = false;
+        boolean reportedFailure = false;
+        boolean reportedPending = false;
         while (isRunning()) {
             try {
                 // 必须绕过系统代理/VPN，否则开启代理时 127.0.0.1 探测会失败造成误报
@@ -357,22 +359,33 @@ public class ServerService extends Service {
                 c.setConnectTimeout(1500);
                 c.setReadTimeout(1500);
                 int code = c.getResponseCode();
+                // 上游未完全就绪时服务端返回 503，但响应体里的 tokenCount 依然有效。
+                // 只认 200 会让界面永远停在「Token 余量：服务启动后显示」。
+                java.io.InputStream is = (code >= 200 && code < 400)
+                        ? c.getInputStream() : c.getErrorStream();
+                String body = is != null ? readAll(is) : "";
+                c.disconnect();
+                Integer tc = parseTokenCount(body);
+                if (tc != null) {
+                    tokenCount.set(tc);
+                }
                 if (code == 200) {
-                    String body = readAll(c.getInputStream());
-                    c.disconnect();
-                    Integer tc = parseTokenCount(body);
-                    if (tc != null) {
-                        tokenCount.set(tc);
-                    }
                     if (!announced) {
                         announced = true;
                         LogStore.get().log("APP", "服务就绪 ✓  API: http://127.0.0.1:" + port(this) + "/v1"
                                 + "  （token 余量 " + (tc == null ? "?" : tc) + "）");
                     }
-                } else {
-                    c.disconnect();
+                } else if (!announced && !reportedPending) {
+                    reportedPending = true;
+                    LogStore.get().log("APP", "上游尚未完全就绪（HTTP " + code
+                            + "），余量会持续刷新，服务可先试着用");
                 }
-            } catch (Throwable ignored) {
+            } catch (Throwable t) {
+                // 不再完全静默：首次失败写入日志，便于定位“Token 余量一直显示待更新”这类问题
+                if (!reportedFailure) {
+                    reportedFailure = true;
+                    LogStore.get().log("APP", "/health 探测失败（Token 余量将不更新）: " + t);
+                }
             }
             try {
                 Thread.sleep(5000);

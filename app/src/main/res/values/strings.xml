@@ -6,10 +6,11 @@
     <string name="title_main">GLM Free API</string>
     <string name="title_harvest">Token 采集</string>
 
-    <string name="status_running">服务运行中 · 端口 %1$d · 已运行 %2$s</string>
-    <string name="status_abnormal">服务状态异常（进程已退出）</string>
+    <string name="status_running">服务运行中 · 已运行 %1$s</string>
+    <string name="status_abnormal">服务异常（进程已退出）</string>
     <string name="status_starting">正在启动…</string>
     <string name="status_stopped">服务已停止</string>
+    <string name="status_detail_port">端口 %1$d</string>
     <string name="status_last_error">最近错误：%1$s</string>
 
     <string name="label_api_url">API 地址</string>
