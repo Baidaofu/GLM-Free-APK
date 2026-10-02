@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Material 3 主题语义色属性。
+      这些 attr 在 material 库中属于非 public API（不在库的 R 字段里），
+      但应用可以通过自己的 R 引用：这里显式声明一次，值统一由
+      values/themes.xml 的 Theme.ZaiApi（及 DynamicColors 变体）提供。
+    -->
+    <attr name="colorPrimary" format="color" />
+    <attr name="colorError" format="color" />
+    <attr name="colorTertiary" format="color" />
+</resources>

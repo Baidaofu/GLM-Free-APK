@@ -1,4 +1,93 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">GLM2API</string>
+
+    <!-- 主界面 -->
+    <string name="title_main">GLM Free API</string>
+    <string name="title_harvest">Token 采集</string>
+
+    <string name="status_running">服务运行中 · 端口 %1$d · 已运行 %2$s</string>
+    <string name="status_abnormal">服务状态异常（进程已退出）</string>
+    <string name="status_starting">正在启动…</string>
+    <string name="status_stopped">服务已停止</string>
+    <string name="status_last_error">最近错误：%1$s</string>
+
+    <string name="label_api_url">API 地址</string>
+    <string name="label_auth_token">Auth Token</string>
+    <string name="action_copy_value">复制</string>
+
+    <string name="action_start">启动服务</string>
+    <string name="action_stop">停止服务</string>
+    <string name="action_import_db">导入 token 库</string>
+    <string name="action_harvest">采集 token</string>
+    <string name="action_clear_db">清空 token 库</string>
+
+    <string name="section_settings">设置</string>
+    <string name="action_expand">展开</string>
+    <string name="action_collapse">收起</string>
+
+    <string name="hint_port">端口（默认 3001）</string>
+    <string name="hint_auth_token">API Key（AUTH_TOKEN，默认 Waguri）</string>
+    <string name="hint_proxy">出站代理（须与 token 采集出口 IP 一致；留空＝直连）</string>
+    <string name="hint_zai_token">ZAI_TOKEN（可选，解锁全模型/图片，留空＝游客）</string>
+    <string name="label_agent_mode">Agent Mode（system/工具调用，推荐开）</string>
+    <string name="label_dynamic_color">跟随系统动态取色（Android 12+）</string>
+    <string name="hint_proxy_warning">提示：captcha 风控校验出口 IP 与 token 采集环境一致。\n手机独立使用时，先开 SagerNet/Clash 连与采集时相同的节点，再把「出站代理」填为其本地端口（如 http://127.0.0.1:7890）。</string>
+
+    <string name="section_log">运行日志</string>
+    <string name="action_copy_log">复制日志</string>
+    <string name="action_clear_log">清空日志</string>
+
+    <string name="toast_starting">正在启动服务…</string>
+    <string name="token_chip_count">Token 余量 %1$d</string>
+    <string name="token_chip_low">余量不足 %1$d · 请重新导入</string>
+    <string name="token_chip_pending">Token 余量：服务启动后显示</string>
+    <string name="token_chip_missing">尚未导入 token 库</string>
+    <string name="toast_stopping">正在停止服务…</string>
+    <string name="toast_copied">%1$s 已复制</string>
+    <string name="toast_no_logs">暂无日志</string>
+    <string name="toast_stop_before_import">请先停止服务再导入（避免文件被占用）</string>
+    <string name="toast_picker_failed">无法打开文件选择器：%1$s</string>
+    <string name="toast_import_ok">导入成功，可启动服务</string>
+    <string name="toast_import_failed">导入失败：%1$s</string>
+    <string name="toast_clear_first">请先停止服务再清空</string>
+    <string name="toast_cleared">已清空 token 库</string>
+    <string name="toast_harvest_open_failed">无法打开采集页：%1$s</string>
+
+    <string name="dialog_clear_db_title">清空 token 库</string>
+    <string name="dialog_clear_db_message">将删除全部 device token%1$s，含采集暂存与备份，不可恢复。确定？</string>
+    <string name="dialog_clear_db_confirm">清空</string>
+    <string name="dialog_clear_db_count">（当前 %1$d 个）</string>
+
+    <!-- Token 采集页 -->
+    <string name="harvest_loading">页面加载中…</string>
+    <string name="harvest_page_loaded">页面已加载，准备触发 token 端点初始化…</string>
+    <string name="harvest_sdk_timeout">✗ 60 秒内 z_um SDK 未就绪，请重新加载重试</string>
+    <string name="harvest_triggering">z_um 未就绪，发送触发消息（%1$s）…</string>
+    <string name="harvest_trigger_sent">已发送触发消息，等待 token 端点初始化（~12s）…</string>
+    <string name="harvest_waiting_sdk">等待 z_um SDK…(%1$d s)</string>
+    <string name="harvest_sdk_ready">✓ z_um SDK 就绪，可开始采集</string>
+    <string name="harvest_running">采集中（目标 %1$d）…</string>
+    <string name="harvest_progress">采集中… %1$d/%2$d%3$s</string>
+    <string name="harvest_failed">✗ 采集失败：%1$s</string>
+    <string name="harvest_all_failed">✗ 0 个 token（全部失败）— 页面可能未完全初始化，尝试重新加载或手动在页面发一条消息后再采</string>
+    <string name="harvest_done">✓ 采集完成：成功 %1$d / 失败 %2$d，入库 %3$d（batch %4$d）</string>
+    <string name="harvest_saved_hint">入库 %1$d 个，累计库中 token 请回到主界面查看余量。</string>
+    <string name="harvest_saved_ok">入库 %1$d 个 token ✓</string>
+    <string name="harvest_reload">重新加载页面</string>
+    <string name="harvest_50">采集 50</string>
+    <string name="harvest_200">采集 200</string>
+    <string name="harvest_settings">采集设置</string>
+    <string name="harvest_collected">已采集 %1$d 个 token</string>
+    <string name="harvest_in_progress">采集进行中</string>
+    <string name="harvest_settings_saved">已保存</string>
+    <string name="harvest_db_failed">入库失败：%1$s</string>
+
+    <string name="dialog_harvest_settings_title">采集设置</string>
+    <string name="dialog_harvest_ua">自定义 UA（留空＝默认：真实 WebView UA 去 wv/Version 标记）</string>
+    <string name="dialog_harvest_trigger">触发消息内容（留空＝随机生成）</string>
+    <string name="dialog_harvest_hint">保存后点「重新加载页面」生效</string>
+    <string name="dialog_random_ua">随机 UA</string>
+    <string name="dialog_reset_ua">恢复默认 UA</string>
+    <string name="dialog_save">保存</string>
 </resources>

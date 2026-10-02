@@ -39,6 +39,7 @@ android {
 
     buildFeatures {
         buildConfig true
+        viewBinding true
     }
 
     packagingOptions {
@@ -52,4 +53,10 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+}
+
+dependencies {
+    // Material 3 Expressive 组件库（1.13+ 提供 M3 Expressive 主题与组件）
+    implementation 'com.google.android.material:material:1.14.0'
+    implementation 'androidx.transition:transition:1.5.0'
 }

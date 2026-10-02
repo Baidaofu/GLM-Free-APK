@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Material 3 亮色配色（源色 #4C56C4 — 与启动图标蓝紫渐变一致）。
+  角色命名遵循 M3 规范，供 Theme.Material3Expressive.* 直接引用。
+-->
+<resources>
+    <color name="md_primary">#4C56C4</color>
+    <color name="md_on_primary">#FFFFFF</color>
+    <color name="md_primary_container">#E1E0FF</color>
+    <color name="md_on_primary_container">#050A6E</color>
+    <color name="md_primary_fixed">#E1E0FF</color>
+    <color name="md_primary_fixed_dim">#C0C1FF</color>
+    <color name="md_on_primary_fixed">#050A6E</color>
+    <color name="md_on_primary_fixed_variant">#39449F</color>
+
+    <color name="md_secondary">#5B5D72</color>
+    <color name="md_on_secondary">#FFFFFF</color>
+    <color name="md_secondary_container">#E0E1F9</color>
+    <color name="md_on_secondary_container">#181A2C</color>
+    <color name="md_secondary_fixed">#E0E1F9</color>
+    <color name="md_secondary_fixed_dim">#C4C5DD</color>
+    <color name="md_on_secondary_fixed">#181A2C</color>
+    <color name="md_on_secondary_fixed_variant">#474A5F</color>
+
+    <color name="md_tertiary">#77536D</color>
+    <color name="md_on_tertiary">#FFFFFF</color>
+    <color name="md_tertiary_container">#FFD7F1</color>
+    <color name="md_on_tertiary_container">#2D1228</color>
+    <color name="md_tertiary_fixed">#FFD7F1</color>
+    <color name="md_tertiary_fixed_dim">#E6BAD7</color>
+    <color name="md_on_tertiary_fixed">#2D1228</color>
+    <color name="md_on_tertiary_fixed_variant">#5D3C55</color>
+
+    <color name="md_error">#BA1A1A</color>
+    <color name="md_on_error">#FFFFFF</color>
+    <color name="md_error_container">#FFDAD6</color>
+    <color name="md_on_error_container">#410002</color>
+
+    <color name="md_background">#FCF8FF</color>
+    <color name="md_on_background">#1B1B21</color>
+    <color name="md_surface">#FCF8FF</color>
+    <color name="md_on_surface">#1B1B21</color>
+    <color name="md_surface_variant">#E4E1EC</color>
+    <color name="md_on_surface_variant">#47464F</color>
+    <color name="md_surface_dim">#DCD9E0</color>
+    <color name="md_surface_bright">#FCF8FF</color>
+
+    <color name="md_surface_container_lowest">#FFFFFF</color>
+    <color name="md_surface_container_low">#F6F2FA</color>
+    <color name="md_surface_container">#F0ECF4</color>
+    <color name="md_surface_container_high">#EAE7EF</color>
+    <color name="md_surface_container_highest">#E4E1E9</color>
+
+    <color name="md_outline">#787680</color>
+    <color name="md_outline_variant">#C8C5D0</color>
+    <color name="md_inverse_surface">#303036</color>
+    <color name="md_inverse_on_surface">#F3EFF7</color>
+    <color name="md_inverse_primary">#C0C1FF</color>
+    <color name="md_scrim">#000000</color>
+
+    <!-- 日志控制台：始终深色，等宽字体 -->
+    <color name="console_background">#10131C</color>
+    <color name="console_text">#D7E3FF</color>
+</resources>
